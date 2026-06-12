@@ -1,0 +1,25 @@
+﻿__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+*.log
+cookies.txt
+
+# Runtime captures and results; keep only directory placeholders.
+captures/*
+!captures/.gitkeep
+results/*
+!results/.gitkeep
+
+# Sensitive/request artifacts.
+*cookie*
+*headers*
+*.har
+
+# Temporary reverse artifacts.
+reverse/assets/tmp_*
