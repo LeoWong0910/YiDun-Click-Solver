@@ -249,6 +249,10 @@ SIFT 仅保留 `0.05` 兼容权重，不作为主导信号。
 python -m py_compile src/yidun_crypto.py src/yidun_ir.py src/yidun_vision.py tools/yidun_click_solver.py
 ```
 
+## 友链
+
+- [Linux.do](https://linux.do/)
+
 ## 免责声明
 
 本项目仅用于 CTF、授权测试和本地沙箱研究。请勿在未授权的真实业务、账号或第三方系统中使用。使用者需自行承担合规与风险责任。
