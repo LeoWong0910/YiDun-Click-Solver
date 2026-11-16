@@ -1,0 +1,37 @@
+# Synology DSM 7 Container Manager project file.
+# Import this directory in Container Manager → Project → Create →
+# "Create with docker-compose.yml", or run locally:
+#   docker compose up -d --build
+name: yidun-click-solver
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: yidun-click-solver:local
+    container_name: yidun-click-solver
+    restart: unless-stopped
+    ports:
+      # Bind all interfaces so LAN devices can reach the NAS service.
+      # Override with HOST_PORT / API bind in .env if needed.
+      - "${HOST_PORT:-8765}:8765"
+    environment:
+      YIDUN_HOST: "0.0.0.0"
+      YIDUN_PORT: "8765"
+      # Optional shared secret. When set, callers must send:
+      #   Authorization: Bearer <token>
+      # or header X-API-Token: <token>
+      YIDUN_API_TOKEN: "${YIDUN_API_TOKEN:-}"
+      YIDUN_MAX_ATTEMPTS: "${YIDUN_MAX_ATTEMPTS:-10}"
+      YIDUN_SOLVE_TIMEOUT: "${YIDUN_SOLVE_TIMEOUT:-120}"
+      YIDUN_ZONE_ID: "${YIDUN_ZONE_ID:-CN31}"
+    volumes:
+      - ./captures:/app/captures
+      - ./results:/app/results
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8765/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
