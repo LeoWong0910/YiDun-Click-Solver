@@ -12,6 +12,7 @@
 - [快速开始](#快速开始)
 - [常用命令](#常用命令)
 - [一键部署到群晖 NAS](#一键部署到群晖-nas)
+- [验证码自动识别与通知推送](#验证码自动识别与通知推送)
 - [识别思路](#识别思路)
 - [输出字段](#输出字段)
 - [项目结构](#项目结构)
@@ -222,7 +223,47 @@ curl -X POST http://<nas-ip>:8765/solve \
 
 也可用 Container Manager 图形界面导入本仓库的 `compose.yaml`。完整说明见 [`docs/SYNOLOGY.md`](docs/SYNOLOGY.md)。
 
+部署后原 CLI 仍可在容器内使用：
+
+```bash
+docker exec -it yidun-click-solver python tools/yidun_click_solver.py
+```
+
 ✅ 已提供：`Dockerfile`、`compose.yaml`、`tools/nas_api_server.py`、`scripts/deploy-synology.sh`
+
+## 验证码自动识别与通知推送
+
+### 自动识别
+
+- **完整闭环**：`POST /solve`（取参 → 本地 CV → `/check`），与 CLI `--auto` 一致
+- **仅本地识别**：`POST /recognize`，传入 `image_path` 或 `image_base64`
+
+```bash
+curl -X POST http://<nas-ip>:8765/solve
+curl -X POST http://<nas-ip>:8765/recognize \
+  -H "Content-Type: application/json" \
+  -d '{"image_path":"captcha_xxx.jpg"}'
+```
+
+### 微信 / 邮件通知
+
+在 `.env` 配置任一渠道后，`/solve` 结束会自动推送：
+
+- `SERVERCHAN_SENDKEY`（Server酱 → 微信）
+- `PUSHPLUS_TOKEN`（PushPlus → 微信）
+- `WECOM_WEBHOOK_URL`（企业微信机器人）
+- `SMTP_*` + `NOTIFY_EMAIL_TO`（邮件）
+- `NOTIFY_WEBHOOK_URL`（通用 webhook）
+
+```bash
+# 测试推送
+curl -X POST http://<nas-ip>:8765/notify/test
+
+# CLI 同样支持
+python tools/yidun_click_solver.py --notify
+```
+
+✅ `src/notify.py`、`src/recognize.py`、`POST /recognize`、`POST /notify/test`
 
 ## 识别思路
 
@@ -265,13 +306,19 @@ SIFT 仅保留 `0.05` 兼容权重，不作为主导信号。
 ├── src/
 │   ├── yidun_crypto.py       # cb / data / validate 纯 Python 加密复现
 │   ├── yidun_ir.py           # IR /v4/j/up 运行态 token 构造
-│   └── yidun_vision.py       # OpenCV 点选图标识别
+│   ├── yidun_vision.py       # OpenCV 点选图标识别
+│   ├── recognize.py          # 本地识别封装（文件 / base64）
+│   └── notify.py             # 微信 / 邮件 / webhook 通知
 ├── tools/
 │   ├── js_crypto_oracle.mjs  # 分析期 JS 对照工具
 │   ├── yidun_click_solver.py # 一键 CLI：取参、识别、校验、输出
 │   └── nas_api_server.py     # 群晖部署用 HTTP API
 ├── scripts/
 │   └── deploy-synology.sh    # 一键同步并 docker compose 部署到 NAS
+├── tests/
+│   ├── test_notify.py
+│   ├── test_recognize.py
+│   └── test_api_build_argv.py
 ├── reverse/assets/           # 逆向分析参考素材
 ├── captures/                 # 运行时验证码图片缓存，默认不提交
 ├── results/                  # 运行结果与 debug 产物，默认不提交

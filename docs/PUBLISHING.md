@@ -9,7 +9,9 @@ Before pushing or publishing this repository:
 
 ```bash
 python -m py_compile src/yidun_crypto.py src/yidun_ir.py src/yidun_vision.py \
+  src/notify.py src/recognize.py \
   tools/yidun_click_solver.py tools/nas_api_server.py
+python -m unittest discover -s tests -v
 ```
 
-- Synology deploy files (`Dockerfile`, `compose.yaml`, `scripts/deploy-synology.sh`, `.env.example`) should stay free of real `YIDUN_API_TOKEN` values.
+- Synology deploy files (`Dockerfile`, `compose.yaml`, `scripts/deploy-synology.sh`, `.env.example`) should stay free of real `YIDUN_API_TOKEN`, SMTP passwords, and push tokens.
