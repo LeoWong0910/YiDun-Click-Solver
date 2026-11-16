@@ -11,6 +11,7 @@
 - [整体架构](#整体架构)
 - [快速开始](#快速开始)
 - [常用命令](#常用命令)
+- [一键部署到群晖 NAS](#一键部署到群晖-nas)
 - [识别思路](#识别思路)
 - [输出字段](#输出字段)
 - [项目结构](#项目结构)
@@ -183,6 +184,46 @@ $env:YIDUN_IR_TOKEN = "<captured-ir-token>"
 python tools/yidun_click_solver.py
 ```
 
+## 一键部署到群晖 NAS
+
+支持 DSM 7 **Container Manager**，把求解器做成局域网 HTTP 服务。
+
+### 1. 配置
+
+```bash
+cp .env.example .env
+# 编辑 NAS_SSH（如 admin@192.168.1.50）、NAS_DIR、可选 YIDUN_API_TOKEN
+```
+
+### 2. 一键部署
+
+```bash
+chmod +x scripts/deploy-synology.sh
+./scripts/deploy-synology.sh
+```
+
+脚本会 rsync 到 NAS，并在远端执行 `docker compose up -d --build`。
+
+### 3. 调用
+
+```bash
+curl http://<nas-ip>:8765/health
+curl -X POST http://<nas-ip>:8765/solve
+```
+
+若设置了 `YIDUN_API_TOKEN`：
+
+```bash
+curl -X POST http://<nas-ip>:8765/solve \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"max_attempts": 5}'
+```
+
+也可用 Container Manager 图形界面导入本仓库的 `compose.yaml`。完整说明见 [`docs/SYNOLOGY.md`](docs/SYNOLOGY.md)。
+
+✅ 已提供：`Dockerfile`、`compose.yaml`、`tools/nas_api_server.py`、`scripts/deploy-synology.sh`
+
 ## 识别思路
 
 视觉部分以稳定、可解释的本地 CV 评分为主：
@@ -227,14 +268,21 @@ SIFT 仅保留 `0.05` 兼容权重，不作为主导信号。
 │   └── yidun_vision.py       # OpenCV 点选图标识别
 ├── tools/
 │   ├── js_crypto_oracle.mjs  # 分析期 JS 对照工具
-│   └── yidun_click_solver.py # 一键 CLI：取参、识别、校验、输出
+│   ├── yidun_click_solver.py # 一键 CLI：取参、识别、校验、输出
+│   └── nas_api_server.py     # 群晖部署用 HTTP API
+├── scripts/
+│   └── deploy-synology.sh    # 一键同步并 docker compose 部署到 NAS
 ├── reverse/assets/           # 逆向分析参考素材
 ├── captures/                 # 运行时验证码图片缓存，默认不提交
 ├── results/                  # 运行结果与 debug 产物，默认不提交
 ├── docs/
-│   ├── assets/                # README/技术文档引用的 debug 示例图
+│   ├── assets/               # README/技术文档引用的 debug 示例图
 │   ├── TECHNICAL.md          # 实现思路说明
+│   ├── SYNOLOGY.md           # 群晖 NAS 部署说明
 │   └── PUBLISHING.md         # GitHub 发布检查清单
+├── Dockerfile                # Container Manager / Docker 镜像
+├── compose.yaml              # 群晖项目 / 本地 compose
+├── .env.example              # NAS 部署环境变量模板
 ├── requirements.txt
 └── README.md
 ```
@@ -246,7 +294,8 @@ SIFT 仅保留 `0.05` 兼容权重，不作为主导信号。
 - 发布前可执行：
 
 ```bash
-python -m py_compile src/yidun_crypto.py src/yidun_ir.py src/yidun_vision.py tools/yidun_click_solver.py
+python -m py_compile src/yidun_crypto.py src/yidun_ir.py src/yidun_vision.py \
+  tools/yidun_click_solver.py tools/nas_api_server.py
 ```
 
 ## 友链
