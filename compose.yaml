@@ -26,6 +26,22 @@ services:
       YIDUN_MAX_ATTEMPTS: "${YIDUN_MAX_ATTEMPTS:-10}"
       YIDUN_SOLVE_TIMEOUT: "${YIDUN_SOLVE_TIMEOUT:-120}"
       YIDUN_ZONE_ID: "${YIDUN_ZONE_ID:-CN31}"
+      # Notifications
+      NOTIFY_ENABLED: "${NOTIFY_ENABLED:-}"
+      NOTIFY_ON: "${NOTIFY_ON:-success,failure}"
+      SERVERCHAN_SENDKEY: "${SERVERCHAN_SENDKEY:-}"
+      PUSHPLUS_TOKEN: "${PUSHPLUS_TOKEN:-}"
+      WECOM_WEBHOOK_URL: "${WECOM_WEBHOOK_URL:-}"
+      NOTIFY_WEBHOOK_URL: "${NOTIFY_WEBHOOK_URL:-}"
+      NOTIFY_EMAIL: "${NOTIFY_EMAIL:-}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-465}"
+      SMTP_SSL: "${SMTP_SSL:-true}"
+      SMTP_STARTTLS: "${SMTP_STARTTLS:-false}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      NOTIFY_EMAIL_TO: "${NOTIFY_EMAIL_TO:-}"
     volumes:
       - ./captures:/app/captures
       - ./results:/app/results

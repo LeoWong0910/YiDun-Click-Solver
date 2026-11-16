@@ -615,6 +615,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="JSON output shape: useful keeps only bypass parameters; debug keeps full retry/vision diagnostics",
     )
     p.add_argument("--timeout", type=float, default=12)
+    p.add_argument(
+        "--notify",
+        action=argparse.BooleanOptionalAction,
+        default=str(os.environ.get("YIDUN_NOTIFY", "")).strip().lower() in {"1", "true", "yes", "on"},
+        help="send email/WeChat push after solve using NOTIFY_*/SMTP_*/SERVERCHAN_*/PUSHPLUS_* env",
+    )
     p.add_argument("--page-referer", default=DEFAULT_PAGE_REFERER)
     p.add_argument("--query-referer", default=DEFAULT_QUERY_REFERER)
     p.add_argument("--version", default="2.28.5")
@@ -643,6 +649,26 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     def emit(code: int) -> int:
         output = result if args.output_detail == "debug" else useful_result(result)
+        if getattr(args, "notify", False):
+            try:
+                from src.notify import NotifyConfig, build_solve_message, notify_all
+
+                useful = useful_result(result)
+                title, body = build_solve_message(ok=bool(useful.get("ok")), result=useful)
+                report = notify_all(
+                    NotifyConfig.from_env(),
+                    ok=bool(useful.get("ok")),
+                    title=title,
+                    body=body,
+                    extra={"exit_code": code},
+                )
+                if args.output_detail == "debug":
+                    output = dict(output)
+                    output["notify"] = report
+            except Exception as notify_exc:  # noqa: BLE001 — never fail the CLI on notify errors
+                if args.output_detail == "debug":
+                    output = dict(output)
+                    output["notify_error"] = str(notify_exc)
         text = json.dumps(output, ensure_ascii=False, indent=2)
         print(text)
         if args.json_out:
